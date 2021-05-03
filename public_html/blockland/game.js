@@ -369,68 +369,72 @@ class Game {
 				chat.style.bottom = '0px';
 				this.activeCamera = this.cameras.chat;
 
-				const videoNon = document.getElementById('video-grid')
-				videoNon.style.display = 'grid'
-
 				ioOn()
 
 				function ioOn() {
-					const socket = io('/')
-					const videoGrid = document.getElementById('video-grid')
-					const myPeer = new Peer(undefined, {
-						host: '/',
-						port: '8081'
-					})
-					const myVideo = document.createElement('video')
-					myVideo.muted = true
-					const peers = {}
-					navigator.mediaDevices.getUserMedia({
-						video: true,
-						audio: true
-					}).then(stream => {
-						addVideoStream(myVideo, stream)
+					const socket = io('/');
+const peer = new Peer();
+let myVideoStream;
+let myId;
+var videoGrid = document.getElementById('videoDiv')
+var myvideo = document.createElement('video');
+myvideo.muted = true;
+const peerConnections = {}
+navigator.mediaDevices.getUserMedia({
+  video:true,
+  audio:true
+}).then((stream)=>{
+  myVideoStream = stream;
+  addVideo(myvideo , stream);
+  peer.on('call' , call=>{
+    call.answer(stream);
+      const vid = document.createElement('video');
+    call.on('stream' , userStream=>{
+      addVideo(vid , userStream);
+    })
+    call.on('error' , (err)=>{
+      alert(err)
+    })
+  })
+}).catch(err=>{
+    alert(err.message)
+})
+peer.on('open' , (id)=>{
+  myId = id;
+  socket.emit("newUser" , id , roomID);
+})
+peer.on('error' , (err)=>{
+  alert(err.type);
+});
+socket.on('userJoined' , id=>{
+  console.log("new user joined")
+  const call  = peer.call(id , myVideoStream);
+  const vid = document.createElement('video');
+  call.on('error' , (err)=>{
+    alert(err);
+  })
+  call.on('stream' , userStream=>{
+    addVideo(vid , userStream);
+  })
+  call.on('close' , ()=>{
+    vid.remove();
+    console.log("user disconect")
+  })
+  peerConnections[id] = call;
+})
+socket.on('userDisconnect' , id=>{
+  if(peerConnections[id]){
+    peerConnections[id].close();
+  }
+})
+function addVideo(video , stream){
+  video.srcObject = stream;
+  video.addEventListener('loadedmetadata', () => {
+    video.play()
+  })
+  videoGrid.append(video);
+}
 
-						myPeer.on('call', call => {
-							call.answer(stream)
-							const video = document.createElement('video')
-							call.on('stream', userVideoStream => {
-								addVideoStream(video, userVideoStream)
-							})
-						})
-
-						socket.on('user-connected', userId => {
-							connectToNewUser(userId, stream)
-						})
-					})
-
-					socket.on('user-disconnected', userId => {
-						if (peers[userId]) peers[userId].close()
-					})
-
-					myPeer.on('open', id => {
-						socket.emit('join-room', ROOM_ID, id)
-					})
-
-					function connectToNewUser(userId, stream) {
-						const call = myPeer.call(userId, stream)
-						const video = document.createElement('video')
-						call.on('stream', userVideoStream => {
-							addVideoStream(video, userVideoStream)
-						})
-						call.on('close', () => {
-							video.remove()
-						})
-
-						peers[userId] = call
-					}
-
-					function addVideoStream(video, stream) {
-						video.srcObject = stream
-						video.addEventListener('loadedmetadata', () => {
-							video.play()
-						})
-						videoGrid.append(video)
-					}
 				}
 
 			}
@@ -443,20 +447,7 @@ class Game {
 				delete this.chatSocketId;
 				chat.style.bottom = '-50px';
 				this.activeCamera = this.cameras.back;
-
-				rev()
-
-			async function rev(){
-				const videob = await document.querySelectorAll('video')
-				videob.forEach(vid=>{
-					vid.remove()
-				})
-				}
 				
-				
-				
-
-
 				// A video's MediaStream object is available through its srcObject attribute
 				const mediaStream = videob.srcObject;
 
@@ -474,7 +465,7 @@ class Game {
 				tracks.forEach(track => track.stop())
 
 				navigator.mediaDevices.getUserMedia({
-						video: true,
+						video: false,
 						audio: false
 					})
 					.then(mediaStream => {
@@ -484,6 +475,12 @@ class Game {
 						tracks[0].stop;
 
 					})
+
+					   const videob = document.querySelectorAll('video')
+					   videob.forEach(vid=>{
+						   vid.remove()
+					   })
+					   
 			} else {
 				console.log("onMouseDown: typing");
 			}
