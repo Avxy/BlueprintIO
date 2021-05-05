@@ -3,6 +3,48 @@
 <html lang="en">
 
 <head>
+<style media="screen">
+		*{
+		  margin: 0;
+		}
+		#videoDiv{
+		  display: grid;
+		  grid-gap: 2px;
+		  height:100%;
+		  grid-template-columns: repeat(auto-fill, 300px);
+		  grid-auto-columns: 100px;
+		}
+		#footer{
+		  width: 100%;
+		  height: 50px;
+		  background-color: white;
+		  display: flex;
+		  justify-content:space-around;
+		  flex:1;
+		  border-bottom: 1px solid grey;
+		  margin-top: 2px;
+		}
+		button{
+		  height: 30px;
+		  width: 80px;
+		  margin-top: 10px;
+		  text-align: center;
+		  border-radius: 10px;
+		  outline: none;
+		  border:none;
+		  text-decoration: none;
+		  background-color:red;
+		  cursor: pointer;
+		}
+		video {
+		  width: 50%;
+		  height: 50%;
+		  object-fit:cover;
+		  border:2px solid white;
+		}
+	  </style>
+
+
 	<title>IO-CHING</title>
 	<meta charset="utf-8">
 	<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
@@ -20,11 +62,7 @@
 	<meta property="og:image:alt" content="Blockland - a multi-player game" />
 	<meta property='og:video' content='https://www.youtube.com/v/1r9V_JEEMlA' />
 	<link href="https://fonts.googleapis.com/css?family=IBM+Plex+Sans|Kavivanar" rel="stylesheet">
-	<script defer src="https://unpkg.com/peerjs@1.2.0/dist/peerjs.min.js"></script>
-
-	<script>
-		const ROOM_ID = "<%= roomId %>"
-	</script>
+	
 	<style>
 		body {
 			font-family: Monospace;
@@ -95,24 +133,14 @@
 			padding: 10px;
 		}
 
-		#video-grid {
-			display: grid;
-			grid-template-columns: repeat(auto-fill, 200px);
-			grid-auto-rows: 200px;
-			position: absolute;
-		}
-
-		video {
-			width: 100%;
-			height: 100%;
-			object-fit: cover;
-		}
 	</style>
 </head>
 
 <body>
 
-	<div style="position: absolute;" id="video-grid"></div>
+	<div style="position: absolute;" id="videoDiv">
+
+    </div>
 
 	<div id="message">
 		<p style="color: #000;" id="message_text"></p>
@@ -135,6 +163,12 @@
 	<script src="toon3d.js"></script>
 	<script src="game.js"></script>
 
+	  <script type="text/javascript">
+		var roomID = "<%= RoomId %>"
+	  </script>
+	  <script src="https://unpkg.com/peerjs@1.3.1/dist/peerjs.min.js" defer></script>
+	  <script src="socket.io/socket.io.js" defer></script>
+	  <!-- <script src="script.js" charset="utf-8" defer></script> -->
 	<script>
 		var game;
 		document.addEventListener("DOMContentLoaded", function () {

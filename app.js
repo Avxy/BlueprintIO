@@ -6,7 +6,11 @@ const { JSDOM } = jsdom
 const { window } = new JSDOM(`...`);
 const http = require('http').Server(app);
 const io = require('socket.io')(http);
-const { v4: uuidV4 } = require('uuid')
+const {v4:uuidv4} = require('uuid');
+const {ExpressPeerServer} = require('peer')
+const peer = ExpressPeerServer(http , {
+  debug:true
+});
 
 
 
@@ -18,6 +22,8 @@ app.set('views', path.join(__dirname,'public_html/blockland'))
 
 app.use(express.static('public_html/blockland'));
 app.use(express.static('public_html/libs'));
+app.use('/peerjs', peer);
+
 // app.use(express.static('public_html/blockland/v3'));
 // app.get('/',function(req, res, next) {
 // 	next()
@@ -28,14 +34,14 @@ app.use(express.static('public_html/libs'));
 // 	res.render('drizzle')
 // })
 
-app.get('/', (req, res) => {
-	res.redirect(`/${uuidV4()}`)
-  })
+// app.get('/' , (req,res)=>{
+// 	res.send(uuidv4());
+//   });
   
-  app.get('/:room', (req, res) => {
-	res.render('index', { roomId: req.params.room })
-	console.log(req.params.room)
-  })
+  app.get('/' , (req,res)=>{
+    res.render('index' , {uuidv4,RoomId:req.params.room});
+});
+
 
 ///////////// Nik Code //////////////////////
 io.sockets.on('connection', function(socket){
@@ -73,20 +79,18 @@ io.sockets.on('connection', function(socket){
 		console.log(`chat message:${data.id} ${data.message}`);
 		io.to(data.id).emit('chat message', { id: socket.id, message: data.message });
 	})
-///////////////////////////////////////////////
 
-	socket.on('join-room', (roomId, userId) => {
-	  socket.join(roomId)
-	  socket.to(roomId).broadcast.emit('user-connected', userId)
-  
-	  socket.on('disconnect', () => {
-		socket.to(roomId).broadcast.emit('user-disconnected', userId)
+	socket.on('newUser' , (id , room)=>{
+		socket.join(room);
+		socket.to(room).broadcast.emit('userJoined' , id);
+		socket.on('disconnect' , ()=>{
+			socket.to(room).broadcast.emit('userDisconnect' , id);
+		})
 	  })
-	})
   })
 
-http.listen(process.env.PORT||8080, function(){
-  console.log('listening on *:8080');
+http.listen(process.env.PORT||3000, function(){
+  console.log('listening on *:3000');
 });
 ////////////////////////// Nik Code ///////////////////////
 setInterval(function(){
